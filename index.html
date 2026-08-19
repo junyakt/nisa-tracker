@@ -191,10 +191,11 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
     <!-- Dashboard -->
     <div id="page-dashboard" class="page active">
       <div class="hero-card">
-        <div class="hero-label">現在資産</div>
+        <div class="hero-label">総資産（NISA + iDeCo）</div>
         <div class="hero-value" id="d-asset">—</div>
         <div class="hero-sub">
-          <div class="hero-sub-item">投資額 <span id="d-total">—</span></div>
+          <div class="hero-sub-item">NISA <span id="d-nisa-asset">—</span></div>
+          <div class="hero-sub-item">iDeCo <span id="d-ideco-asset">—</span></div>
           <div class="hero-sub-item" id="d-gain-wrap">損益 <span id="d-gain">—</span></div>
         </div>
         <div class="hero-chart-area">
@@ -206,7 +207,7 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
         <div class="metric-card">
           <div class="metric-label">IRR（年率）</div>
           <div class="metric-val blue" id="d-irr">—</div>
-          <div class="metric-sub">内部収益率</div>
+          <div class="metric-sub">NISA 内部収益率</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">運用年数</div>
@@ -226,26 +227,29 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
         <div class="metric-card">
           <div class="metric-label">含み益率</div>
           <div class="metric-val" id="d-gain-pct">—</div>
-          <div class="metric-sub">対投資額</div>
+          <div class="metric-sub">対総投資額</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">評価損益</div>
           <div class="metric-val" id="d-gain-abs">—</div>
-          <div class="metric-sub">現在資産 − 投資額</div>
+          <div class="metric-sub">総資産 − 総投資額</div>
         </div>
         <div class="metric-card" style="grid-column:1/-1">
           <div class="metric-label">旧NISA</div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
-            <div>
-              <div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">累計投資額</div>
-              <div class="metric-val" id="d-oldnisa-invest" style="font-size:1.1rem">—</div>
-            </div>
+            <div><div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">累計投資額</div><div class="metric-val" id="d-oldnisa-invest" style="font-size:1.1rem">—</div></div>
             <div style="font-size:1.25rem;color:var(--label4)">→</div>
-            <div style="text-align:right">
-              <div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">評価額（含む運用益）</div>
-              <div class="metric-val green" id="d-oldnisa-eval" style="font-size:1.1rem">—</div>
-            </div>
+            <div style="text-align:right"><div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">評価額（含む運用益）</div><div class="metric-val green" id="d-oldnisa-eval" style="font-size:1.1rem">—</div></div>
           </div>
+        </div>
+        <div class="metric-card" style="grid-column:1/-1">
+          <div class="metric-label">iDeCo</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">累計拠出額</div><div class="metric-val" id="d-ideco-contrib" style="font-size:1.1rem">—</div></div>
+            <div style="font-size:1.25rem;color:var(--label4)">→</div>
+            <div style="text-align:right"><div style="font-size:0.6875rem;color:var(--label3);margin-bottom:2px">現在評価額</div><div class="metric-val blue" id="d-ideco-eval" style="font-size:1.1rem">—</div></div>
+          </div>
+          <div style="margin-top:8px;font-size:0.75rem;color:var(--label3)">月額 ¥23,000 ・ 2048年まで積立</div>
         </div>
       </div>
       <div style="height:28px"></div>
@@ -253,6 +257,10 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
 
     <!-- Records -->
     <div id="page-records" class="page">
+      <div style="display:flex;gap:8px;padding:12px 16px 0">
+        <button id="tab-nisa" onclick="switchRecordsTab('nisa')" style="flex:1;padding:8px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:0.875rem;font-weight:600;cursor:pointer;background:var(--blue);color:#fff">NISA</button>
+        <button id="tab-ideco" onclick="switchRecordsTab('ideco')" style="flex:1;padding:8px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:0.875rem;font-weight:600;cursor:pointer;background:var(--fill1);color:var(--label2)">iDeCo</button>
+      </div>
       <div id="records-body" style="padding-bottom:8px"></div>
     </div>
 
@@ -291,7 +299,7 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
       <div class="section-header">年別予測（〜2048年）</div>
       <div class="inset-group" style="overflow:auto;-webkit-overflow-scrolling:touch">
         <table class="fc-table">
-          <thead><tr><th>年</th><th>積立</th><th>売却</th><th>年末資産</th></tr></thead>
+          <thead><tr><th>年</th><th>NISA積立</th><th>売却</th><th>NISA資産</th><th>iDeCo拠出</th><th>iDeCo資産</th><th>総資産</th></tr></thead>
           <tbody id="fc-tbody"></tbody>
         </table>
       </div>
@@ -367,21 +375,15 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
 
 <script>
 const PASS='2525';
-const SKEY='nisa_v3'; // v3 = 全て円単位
+const SKEY='nisa_v3';
 const AKEY='nisa_auth';
-const NISA_LIMIT=18000000; // ¥18,000,000 固定
-let assetChart=null, fcChart=null;
+const NISA_LIMIT=18000000;
+const IDECO_MONTHLY=23000; // 月額固定
+let assetChart=null, fcChart=null, idecoChart=null;
 let curPage='dashboard';
 let editEvIdx=null;
+let recordsTab='nisa'; // 'nisa' or 'ideco'
 
-/* ─── データ構造（全て円単位） ───
-  settings.currentAsset      : 円
-  settings.annualInvestment  : 円
-  records.investmentAmount   : 円
-  records.yearEndAsset       : 円
-  saleEvents.amount          : 円
-  fcParams.annual            : 円
-*/
 function defData(){
   return{
     settings:{startYear:2021, currentAsset:28525354, annualInvestment:1200000},
@@ -393,6 +395,15 @@ function defData(){
       {year:2025, tsumitateAmount:1200000, growthAmount:600000,  oldNisaAmount:0, investmentAmount:1800000, yearEndAsset:24349211,memo:''},
       {year:2026, tsumitateAmount:600000,  growthAmount:350000,  oldNisaAmount:0, investmentAmount:950000,  yearEndAsset:28525354,memo:''},
     ],
+    idecoRecords:[
+      {year:2021, contribution:276000, cumContribution:483000,  yearEndAsset:617296},
+      {year:2022, contribution:276000, cumContribution:759000,  yearEndAsset:879224},
+      {year:2023, contribution:276000, cumContribution:1035000, yearEndAsset:1645521},
+      {year:2024, contribution:276000, cumContribution:1311000, yearEndAsset:2010316},
+      {year:2025, contribution:276000, cumContribution:1587000, yearEndAsset:2759372},
+      {year:2026, contribution:46000,  cumContribution:1633000, yearEndAsset:3283798},
+    ],
+    idecoSettings:{currentAsset:3283798, startYear:2021},
     saleEvents:[],
     fcParams:{rate:5, annual:1200000}
   };
@@ -508,6 +519,10 @@ function goPage(page,el){
   const titles={dashboard:'ダッシュボード',records:'年別実績',forecast:'将来予測',settings:'設定'};
   document.getElementById('nav-title').textContent=titles[page];
   document.getElementById('nav-action-add').classList.toggle('hidden',page!=='records');
+  document.getElementById('nav-action-add').onclick=()=>{
+    if(recordsTab==='ideco')openAddIdecoRecord(null);
+    else openAddRecord(null);
+  };
   if(page==='dashboard')renderDashboard();
   else if(page==='records')renderRecords();
   else if(page==='forecast'){loadFcParams();renderForecast();}
@@ -552,47 +567,67 @@ function calcIRR(records, currentAsset){
 /* ─── Dashboard ─── */
 function renderDashboard(){
   const d=load();
-  const asset=d.settings.currentAsset;
+  const nisaAsset=d.settings.currentAsset;
+  const idecoAsset=(d.idecoSettings&&d.idecoSettings.currentAsset)||0;
+  const totalAsset=nisaAsset+idecoAsset;
+
   const tsumitateTotal=d.records.reduce((s,r)=>s+(r.tsumitateAmount||0),0);
   const growthTotal=d.records.reduce((s,r)=>s+(r.growthAmount||0),0);
   const oldNisaTotal=d.records.reduce((s,r)=>s+(r.oldNisaAmount||0),0);
-  const totalInvest=tsumitateTotal+growthTotal+oldNisaTotal;
-  const newNisaUsed=tsumitateTotal+growthTotal; // NISA残枠計算対象（旧NISA除外）
-  const gain=asset-totalInvest;
+  const nisaTotalInvest=tsumitateTotal+growthTotal+oldNisaTotal;
+  const newNisaUsed=tsumitateTotal+growthTotal;
+
+  const idecoRecords=d.idecoRecords||[];
+  const idecoCumContrib=idecoRecords.length>0?Math.max(...idecoRecords.map(r=>r.cumContribution)):0;
+
+  const totalInvest=nisaTotalInvest+idecoCumContrib;
+  const gain=totalAsset-totalInvest;
   const gainPct=totalInvest>0?gain/totalInvest:null;
-  const irr=calcIRR(d.records,asset);
+  const irr=calcIRR(d.records,nisaAsset);
   const now=new Date().getFullYear();
   const startY=d.settings.startYear;
   const nisaLeft=Math.max(0,NISA_LIMIT-newNisaUsed);
+  const GROWTH_LIMIT=12000000;
+  const growthLeft=Math.max(0,GROWTH_LIMIT-growthTotal);
 
-  document.getElementById('d-asset').textContent=fmt(asset);
-  document.getElementById('d-total').textContent=fmt(totalInvest);
+  // ヒーロー
+  document.getElementById('d-asset').textContent=fmt(totalAsset);
+  document.getElementById('d-nisa-asset').textContent=fmt(nisaAsset);
+  document.getElementById('d-ideco-asset').textContent=fmt(idecoAsset);
   const gainEl=document.getElementById('d-gain');
   const gainWrap=document.getElementById('d-gain-wrap');
   gainEl.textContent=(gain>=0?'+':'')+fmt(gain);
   gainWrap.className='hero-sub-item '+(gain>0?'pos':gain<0?'neg':'');
+
+  // メトリクス
   document.getElementById('d-irr').textContent=fmtPct(irr);
   document.getElementById('d-irr').className='metric-val '+(irr&&irr>0?'blue':irr&&irr<0?'red':'');
   document.getElementById('d-years').textContent=(now-startY+1)+'年目';
   document.getElementById('d-start-year').textContent='開始 '+startY+'年';
   document.getElementById('d-nisa-left').textContent=fmt(nisaLeft);
-  const GROWTH_LIMIT=12000000;
-  const growthLeft=Math.max(0,GROWTH_LIMIT-growthTotal);
   document.getElementById('d-growth-left').textContent=fmt(growthLeft);
+
   const gainAbsEl=document.getElementById('d-gain-abs');
   gainAbsEl.textContent=(gain>=0?'+':'')+fmt(gain);
   gainAbsEl.className='metric-val '+(gain>0?'green':gain<0?'red':'');
-  // 旧NISA：投資額累計と、現在資産のうち旧NISAに帰属する評価額を推定
-  // 評価額 = 現在資産 × (旧NISA投資額 / 全投資額) で按分
-  const oldNisaInvest=oldNisaTotal;
-  const oldNisaEval=totalInvest>0?Math.round(asset*(oldNisaInvest/totalInvest)):0;
-  document.getElementById('d-oldnisa-invest').textContent=fmt(oldNisaInvest);
-  const oldNisaEvalEl=document.getElementById('d-oldnisa-eval');
-  oldNisaEvalEl.textContent=fmt(oldNisaEval);
-  oldNisaEvalEl.className='metric-val '+(oldNisaEval>oldNisaInvest?'green':oldNisaEval<oldNisaInvest?'red':'');
+
   const gainPctEl=document.getElementById('d-gain-pct');
   gainPctEl.textContent=gainPct!=null?(gainPct>=0?'+':'')+fmtPct(gainPct):'—';
   gainPctEl.className='metric-val '+(gainPct>0?'green':gainPct<0?'red':'');
+
+  // 旧NISA
+  const oldNisaEval=nisaTotalInvest>0?Math.round(nisaAsset*(oldNisaTotal/nisaTotalInvest)):0;
+  document.getElementById('d-oldnisa-invest').textContent=fmt(oldNisaTotal);
+  const oldNisaEvalEl=document.getElementById('d-oldnisa-eval');
+  oldNisaEvalEl.textContent=fmt(oldNisaEval);
+  oldNisaEvalEl.className='metric-val '+(oldNisaEval>oldNisaTotal?'green':oldNisaEval<oldNisaTotal?'red':'');
+
+  // iDeCo
+  document.getElementById('d-ideco-contrib').textContent=fmt(idecoCumContrib);
+  const idecoEvalEl=document.getElementById('d-ideco-eval');
+  idecoEvalEl.textContent=fmt(idecoAsset);
+  idecoEvalEl.className='metric-val '+(idecoAsset>idecoCumContrib?'green':idecoAsset<idecoCumContrib?'red':'blue');
+
   drawAssetChart(d);
 }
 
@@ -602,23 +637,43 @@ function drawAssetChart(d){
   const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
   const blue=isDark?'#0a84ff':'#007aff';
   const green=isDark?'#30d158':'#34c759';
+  const orange=isDark?'#ff9f0a':'#ff9500';
+  const purple=isDark?'#bf5af2':'#9b59b6';
   const gridC=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
   const tickC=isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.4)';
   const blueAlpha=isDark?'rgba(10,132,255,0.12)':'rgba(0,122,255,0.08)';
+
   if(sorted.length===0){
     document.getElementById('chart-legend').innerHTML='<span style="font-size:0.8125rem;color:var(--label3)">実績データなし — 年別実績タブから追加してください</span>';
     return;
   }
+
   const labels=sorted.map(r=>r.year+'');
-  const assets=sorted.map(r=>r.yearEndAsset);
+  const nisaAssets=sorted.map(r=>r.yearEndAsset);
   let cum=0;
-  const cumInvests=sorted.map(r=>{cum+=r.investmentAmount;return cum;});
+  const cumInvests=sorted.map(r=>{cum+=(r.tsumitateAmount||0)+(r.growthAmount||0)+(r.oldNisaAmount||0);return cum;});
+
+  // iDeCoラインを同じ年ラベルに合わせる
+  const idecoRecords=d.idecoRecords||[];
+  const idecoAssets=sorted.map(r=>{
+    const ir=idecoRecords.find(x=>x.year===r.year);
+    return ir?ir.yearEndAsset:null;
+  });
+
+  // NISA + iDeCo 合算ライン
+  const totalAssets=sorted.map((r,i)=>{
+    const ideco=idecoAssets[i];
+    return ideco!=null?r.yearEndAsset+ideco:null;
+  });
+
   const ctx=document.getElementById('chart-asset').getContext('2d');
   assetChart=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
-      {label:'年末資産',data:assets,borderColor:blue,backgroundColor:blueAlpha,borderWidth:2.5,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:blue,pointBorderColor:'#fff',pointBorderWidth:2,fill:true,tension:0.35,order:1},
-      {label:'累計投資額',data:cumInvests,borderColor:isDark?'rgba(52,199,89,0.7)':'rgba(52,199,89,0.65)',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:3,pointBackgroundColor:isDark?'#30d158':'#34c759',pointBorderColor:'transparent',fill:false,tension:0.35,order:2}
+      {label:'総資産',data:totalAssets,borderColor:purple,backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3,pointBackgroundColor:purple,fill:false,tension:0.35,order:0,spanGaps:true},
+      {label:'NISA資産',data:nisaAssets,borderColor:blue,backgroundColor:blueAlpha,borderWidth:2.5,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:blue,pointBorderColor:'#fff',pointBorderWidth:2,fill:true,tension:0.35,order:1},
+      {label:'iDeCo資産',data:idecoAssets,borderColor:orange,backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:orange,pointBorderColor:'#fff',pointBorderWidth:1.5,fill:false,tension:0.35,order:2,spanGaps:false},
+      {label:'累計投資額',data:cumInvests,borderColor:isDark?'rgba(52,199,89,0.7)':'rgba(52,199,89,0.65)',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:3,pointBackgroundColor:isDark?'#30d158':'#34c759',pointBorderColor:'transparent',fill:false,tension:0.35,order:3}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -629,7 +684,8 @@ function drawAssetChart(d){
           backgroundColor:isDark?'rgba(30,30,32,0.95)':'rgba(255,255,255,0.97)',
           titleColor:isDark?'#fff':'#000',bodyColor:isDark?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)',
           borderColor:isDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.1)',borderWidth:1,padding:10,cornerRadius:10,
-          callbacks:{title:i=>i[0].label+'年',label:i=>' '+i.dataset.label+': '+fmt(i.raw)}
+          filter:item=>item.raw!==null,
+          callbacks:{title:i=>i[0].label+'年',label:i=>i.raw!=null?' '+i.dataset.label+': '+fmt(i.raw):null}
         }
       },
       scales:{
@@ -640,12 +696,32 @@ function drawAssetChart(d){
     }
   });
   document.getElementById('chart-legend').innerHTML=`
-    <div class="legend-item"><div class="legend-dot" style="background:${blue}"></div>年末資産</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${purple}"></div>総資産</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${blue}"></div>NISA</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>iDeCo</div>
     <div class="legend-item"><div class="legend-dot" style="background:${green};opacity:0.7"></div>累計投資額</div>`;
 }
 
 /* ─── Records ─── */
+function switchRecordsTab(tab){
+  recordsTab=tab;
+  const btnNisa=document.getElementById('tab-nisa');
+  const btnIdeco=document.getElementById('tab-ideco');
+  if(btnNisa&&btnIdeco){
+    btnNisa.style.background=tab==='nisa'?'var(--blue)':'var(--fill1)';
+    btnNisa.style.color=tab==='nisa'?'#fff':'var(--label2)';
+    btnIdeco.style.background=tab==='ideco'?'var(--blue)':'var(--fill1)';
+    btnIdeco.style.color=tab==='ideco'?'#fff':'var(--label2)';
+  }
+  renderRecords();
+}
+
 function renderRecords(){
+  if(recordsTab==='ideco'){renderIdecoRecords();return;}
+  renderNisaRecords();
+}
+
+function renderNisaRecords(){
   const d=load();
   const sorted=[...d.records].sort((a,b)=>b.year-a.year);
   const asc=[...d.records].sort((a,b)=>a.year-b.year);
@@ -666,10 +742,8 @@ function renderRecords(){
     const prevAsset=prev?prev.yearEndAsset:0;
     const totalInv=(r.tsumitateAmount||0)+(r.growthAmount||0)+(r.oldNisaAmount||0);
     if(prevAsset<=0)return null;
-    // Modified Dietz法：投資を年中（0.5）入金とみなして分母を補正
-    const gain=r.yearEndAsset-prevAsset-totalInv;
-    const denominator=prevAsset+(totalInv*0.5);
-    return gain/denominator;
+    const g=r.yearEndAsset-prevAsset-totalInv;
+    return g/(prevAsset+totalInv*0.5);
   }
   el.innerHTML=`<div style="height:12px"></div><div class="record-group">`+
   sorted.map(r=>{
@@ -678,7 +752,6 @@ function renderRecords(){
     const ar=annualReturn(r);
     const arStr=ar!=null?(ar>=0?'+':'')+fmtPct(ar):'—';
     const arColor=ar>0?'var(--green)':ar<0?'var(--red)':'var(--label3)';
-    const totalInv=(r.tsumitateAmount||0)+(r.growthAmount||0)+(r.oldNisaAmount||0);
     const subParts=[];
     if(r.tsumitateAmount) subParts.push('積立'+fmt(r.tsumitateAmount));
     if(r.growthAmount)    subParts.push('成長'+fmt(r.growthAmount));
@@ -697,6 +770,110 @@ function renderRecords(){
       <div style="margin-left:8px;opacity:0.25"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--label1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 7,7 1,13"/></svg></div>
     </div>`;
   }).join('')+'</div>';
+}
+
+function renderIdecoRecords(){
+  const d=load();
+  const records=[...(d.idecoRecords||[])].sort((a,b)=>b.year-a.year);
+  const asc=[...(d.idecoRecords||[])].sort((a,b)=>a.year-b.year);
+  const el=document.getElementById('records-body');
+  if(records.length===0){
+    el.innerHTML='<div class="empty-hint">iDeCoデータがありません<br><span style="font-size:0.8125rem">右上の ＋ から追加してください</span></div>';
+    return;
+  }
+  function idecoGain(r){
+    const idx=asc.findIndex(x=>x.year===r.year);
+    const prev=idx>0?asc[idx-1]:null;
+    return r.yearEndAsset-(prev?prev.yearEndAsset:0)-r.contribution;
+  }
+  function idecoReturn(r){
+    const idx=asc.findIndex(x=>x.year===r.year);
+    const prev=idx>0?asc[idx-1]:null;
+    const prevAsset=prev?prev.yearEndAsset:0;
+    if(prevAsset<=0)return null;
+    const g=r.yearEndAsset-prevAsset-r.contribution;
+    return g/(prevAsset+r.contribution*0.5);
+  }
+  el.innerHTML=`<div style="height:12px"></div><div class="record-group">`+
+  records.map(r=>{
+    const g=idecoGain(r);
+    const gc=g>0?'green':g<0?'red':'';
+    const ar=idecoReturn(r);
+    const arStr=ar!=null?(ar>=0?'+':'')+fmtPct(ar):'—';
+    const arColor=ar>0?'var(--green)':ar<0?'var(--red)':'var(--label3)';
+    return `<div class="record-row" onclick="openAddIdecoRecord(${r.year})">
+      <div class="rec-year">${r.year}</div>
+      <div class="rec-mid">
+        <div class="rec-invest">拠出 ${fmt(r.contribution)}</div>
+        <div style="font-size:0.7rem;color:var(--label4);margin-top:2px">累計 ${fmt(r.cumContribution)}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="rec-asset">${fmt(r.yearEndAsset)}</div>
+        <div class="rec-gain" style="color:var(--${gc||'label3'})">${g>=0?'+':''}${fmt(g)}</div>
+        <div style="font-size:0.7rem;color:${arColor};margin-top:1px">年利 ${arStr}</div>
+      </div>
+      <div style="margin-left:8px;opacity:0.25"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="var(--label1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 7,7 1,13"/></svg></div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function openAddIdecoRecord(year){
+  const d=load();
+  const rec=year!=null?(d.idecoRecords||[]).find(r=>r.year===year):null;
+  const isEdit=!!rec;
+  const now=new Date().getFullYear();
+  const yearOpts=[...Array(now-2020)].map((_,i)=>{
+    const y=now-i;
+    return `<option value="${y}"${(isEdit?rec.year:now)===y?' selected':''}>${y}年</option>`;
+  }).join('');
+  document.getElementById('sheet-content').innerHTML=`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${isEdit?year+'年のiDeCo実績':'新しいiDeCo実績'}</div>
+    <div class="sheet-group">
+      <div class="sheet-field">
+        <span class="field-label">年</span>
+        <select class="field-input" id="ir-year" style="cursor:pointer;appearance:auto;color:var(--blue);text-align:right;">${yearOpts}</select>
+      </div>
+      <div class="sheet-field">
+        <span class="field-label">年度拠出金</span>
+        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-contrib', isEdit?rec.contribution:276000)}</div>
+      </div>
+      <div class="sheet-field">
+        <span class="field-label">拠出金累計</span>
+        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-cum', isEdit?rec.cumContribution:0)}</div>
+      </div>
+      <div class="sheet-field">
+        <span class="field-label">年末評価額</span>
+        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-asset', isEdit?rec.yearEndAsset:0)}</div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn cancel" onclick="closeSheet()">キャンセル</button>
+      <button class="sheet-btn save" onclick="saveIdecoRecord(${isEdit})">保存</button>
+    </div>
+    ${isEdit?`<button class="sheet-btn destructive" onclick="deleteIdecoRecord(${year})">この年のデータを削除</button>`:''}
+  `;
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+
+function saveIdecoRecord(isEdit){
+  const year=parseInt(document.getElementById('ir-year').value);
+  const d=load();
+  if(!d.idecoRecords)d.idecoRecords=[];
+  const rec={year, contribution:getMoneyVal('ir-contrib'), cumContribution:getMoneyVal('ir-cum'), yearEndAsset:getMoneyVal('ir-asset')};
+  const idx=d.idecoRecords.findIndex(r=>r.year===year);
+  if(idx>=0)d.idecoRecords[idx]=rec;else d.idecoRecords.push(rec);
+  const latest=[...d.idecoRecords].sort((a,b)=>b.year-a.year)[0];
+  if(!d.idecoSettings)d.idecoSettings={startYear:2021};
+  d.idecoSettings.currentAsset=latest.yearEndAsset;
+  save(d);closeSheet();renderRecords();toast('保存しました');
+}
+
+function deleteIdecoRecord(year){
+  if(!confirm(year+'年のiDeCoデータを削除しますか？'))return;
+  const d=load();
+  d.idecoRecords=(d.idecoRecords||[]).filter(r=>r.year!==year);
+  save(d);closeSheet();renderRecords();toast('削除しました');
 }
 
 function openAddRecord(year){
@@ -786,27 +963,52 @@ function calcForecast(){
   const annual=d.settings.annualInvestment||1200000;
   const baseAsset=d.settings.currentAsset;
   const now=new Date().getFullYear();
-  // 新NISA累計（積立+成長のみ、旧NISA除外）→ NISA残枠計算に使用
+  const IDECO_ANNUAL=IDECO_MONTHLY*12; // ¥276,000
+  const IDECO_END=2048;
+
+  // ─ NISA ─
   const newNisaInvested=d.records.reduce((s,r)=>s+(r.tsumitateAmount||0)+(r.growthAmount||0),0);
-  // 過去実績行（表示用invは全投資額）
   const pastRecords=[...d.records].sort((a,b)=>a.year-b.year);
   const pastRows=pastRecords.map(r=>({
     year:r.year,
-    inv:(r.tsumitateAmount||0)+(r.growthAmount||0)+(r.oldNisaAmount||0),
-    sale:0,asset:r.yearEndAsset,nisaDone:false,isPast:true
+    nisaInv:(r.tsumitateAmount||0)+(r.growthAmount||0)+(r.oldNisaAmount||0),
+    sale:0, nisaAsset:r.yearEndAsset, nisaDone:false, isPast:true,
+    idecoInv:0, idecoAsset:0, totalAsset:0
   }));
-  // 将来行
-  let asset=baseAsset, cumNewNisa=newNisaInvested;
+  // 過去iDeCoを合算
+  pastRows.forEach(r=>{
+    const ir=(d.idecoRecords||[]).find(x=>x.year===r.year);
+    r.idecoAsset=ir?ir.yearEndAsset:0;
+    r.idecoInv=ir?ir.contribution:0;
+    r.totalAsset=r.nisaAsset+(r.idecoAsset||0);
+  });
+
+  // ─ 将来予測 ─
+  let nisaAsset=baseAsset, cumNewNisa=newNisaInvested;
+  const idecoLatest=(d.idecoRecords||[]).sort((a,b)=>b.year-a.year)[0];
+  let idecoAsset=idecoLatest?idecoLatest.yearEndAsset:0;
   const futureRows=[];
   for(let y=now+1;y<=2048;y++){
-    const inv=cumNewNisa<NISA_LIMIT?Math.min(annual,NISA_LIMIT-cumNewNisa):0;
+    // NISA
+    const nisaInv=cumNewNisa<NISA_LIMIT?Math.min(annual,NISA_LIMIT-cumNewNisa):0;
     const sale=(d.saleEvents||[]).filter(e=>e.year===y).reduce((s,e)=>s+e.amount,0);
-    asset=Math.max(0,asset+inv-sale)*(1+rate);
-    cumNewNisa+=inv;
-    futureRows.push({year:y,inv,sale,asset:Math.round(asset),nisaDone:cumNewNisa>=NISA_LIMIT,isPast:false});
+    nisaAsset=Math.max(0,nisaAsset+nisaInv-sale)*(1+rate);
+    cumNewNisa+=nisaInv;
+    // iDeCo（2048年まで積立、以降は運用のみ）
+    const idecoInv=y<=IDECO_END?IDECO_ANNUAL:0;
+    idecoAsset=(idecoAsset+idecoInv)*(1+rate);
+    futureRows.push({
+      year:y, nisaInv, sale,
+      nisaAsset:Math.round(nisaAsset),
+      nisaDone:cumNewNisa>=NISA_LIMIT,
+      idecoInv, idecoAsset:Math.round(idecoAsset),
+      totalAsset:Math.round(nisaAsset+idecoAsset),
+      isPast:false
+    });
   }
   return{pastRows,futureRows};
 }
+
 function renderForecast(){
   const d=load();
   const el=document.getElementById('fc-annual-display');
@@ -816,84 +1018,107 @@ function renderForecast(){
   drawFcChart(pastRows,futureRows);
   renderFcTable(pastRows,futureRows);
 }
+
 function drawFcChart(pastRows,futureRows){
   if(fcChart){fcChart.destroy();fcChart=null;}
   const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
   const blue=isDark?'#0a84ff':'#007aff';
+  const blueAlpha=isDark?'rgba(10,132,255,0.1)':'rgba(0,122,255,0.07)';
   const green=isDark?'#30d158':'#34c759';
   const greenAlpha=isDark?'rgba(48,209,88,0.1)':'rgba(52,199,89,0.08)';
   const orange=isDark?'#ff9f0a':'#ff9500';
+  const purple=isDark?'#bf5af2':'#9b59b6';
+  const purpleAlpha=isDark?'rgba(191,90,242,0.1)':'rgba(155,89,182,0.07)';
   const gridC=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
   const tickC=isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.4)';
   const d=load();
   const now=new Date().getFullYear();
+
   const pastLabels=pastRows.map(r=>String(r.year));
   const futureLabels=futureRows.map(r=>String(r.year));
   const allLabels=[...pastLabels,String(now),...futureLabels];
-  const pastAssets=pastRows.map(r=>r.asset);
-  const curAsset=d.settings.currentAsset;
-  const futureAssets=futureRows.map(r=>r.asset);
-  const pastLine=[...pastAssets,curAsset,...futureRows.map(()=>null)];
-  const futureLine=[...pastRows.map(()=>null),curAsset,...futureAssets];
-  let cumNewNisaPast=0;
-  const pastCums=pastRows.map(r=>{
-    // 過去は記録された新NISA分を使う（旧NISA除外）
-    const newPart=d.records.find(rec=>rec.year===r.year);
-    cumNewNisaPast+=newPart?((newPart.tsumitateAmount||0)+(newPart.growthAmount||0)):0;
-    return cumNewNisaPast;
-  });
-  const totalNewNisaNow=d.records.reduce((s,r)=>s+(r.tsumitateAmount||0)+(r.growthAmount||0),0);
-  let fcCum=totalNewNisaNow;
-  const futureCums=futureRows.map(r=>{fcCum=Math.min(NISA_LIMIT,fcCum+r.inv);return fcCum;});
-  const allCums=[...pastCums,totalNewNisaNow,...futureCums];
+  const N=pastRows.length, F=futureRows.length;
+
+  // 現在時点の値
+  const curNisa=d.settings.currentAsset;
+  const idecoLatest=(d.idecoRecords||[]).sort((a,b)=>b.year-a.year)[0];
+  const curIdeco=idecoLatest?idecoLatest.yearEndAsset:0;
+  const curTotal=curNisa+curIdeco;
+
+  // 過去ライン（実績）
+  const pastNisaLine=[...pastRows.map(r=>r.nisaAsset), curNisa, ...Array(F).fill(null)];
+  const pastIdecoLine=[...pastRows.map(r=>r.idecoAsset||null), curIdeco, ...Array(F).fill(null)];
+  const pastTotalLine=[...pastRows.map(r=>r.totalAsset), curTotal, ...Array(F).fill(null)];
+
+  // 将来ライン（予測）
+  const futureNisaLine=[...Array(N).fill(null), curNisa, ...futureRows.map(r=>r.nisaAsset)];
+  const futureIdecoLine=[...Array(N).fill(null), curIdeco, ...futureRows.map(r=>r.idecoAsset)];
+  const futureTotalLine=[...Array(N).fill(null), curTotal, ...futureRows.map(r=>r.totalAsset)];
+
   const ctx=document.getElementById('chart-forecast').getContext('2d');
   fcChart=new Chart(ctx,{
     type:'line',
-    data:{labels:allLabels,datasets:[
-      {label:'実績資産',data:pastLine,borderColor:blue,backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,pointBackgroundColor:blue,pointBorderColor:'#fff',pointBorderWidth:1.5,fill:false,tension:0.3,order:1,spanGaps:false},
-      {label:'予測資産',data:futureLine,borderColor:green,backgroundColor:greenAlpha,borderWidth:2.5,
-        pointRadius:(ctx)=>{const yr=parseInt(allLabels[ctx.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?6:2;},
-        pointBackgroundColor:(ctx)=>{const yr=parseInt(allLabels[ctx.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?orange:green;},
-        pointBorderColor:'#fff',pointBorderWidth:1.5,fill:true,tension:0.3,order:2,spanGaps:false},
-      {label:'累計投資額',data:allCums,borderColor:isDark?'rgba(255,159,10,0.5)':'rgba(255,149,0,0.5)',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false,tension:0.3,order:3,spanGaps:true}
+    data:{labels:allLabels, datasets:[
+      // 総資産
+      {label:'総資産（実績）', data:pastTotalLine, borderColor:purple, backgroundColor:'transparent', borderWidth:2.5, pointRadius:3, pointBackgroundColor:purple, pointBorderColor:'#fff', pointBorderWidth:1.5, fill:false, tension:0.3, spanGaps:false, order:0},
+      {label:'総資産（予測）', data:futureTotalLine, borderColor:purple, backgroundColor:purpleAlpha, borderWidth:2.5, pointRadius:2, fill:true, tension:0.3, spanGaps:false, order:1},
+      // NISA
+      {label:'NISA（実績）', data:pastNisaLine, borderColor:blue, backgroundColor:'transparent', borderWidth:2.5, pointRadius:3, pointBackgroundColor:blue, pointBorderColor:'#fff', pointBorderWidth:1.5, fill:false, tension:0.3, spanGaps:false, order:2},
+      {label:'NISA（予測）', data:futureNisaLine, borderColor:blue, backgroundColor:blueAlpha,
+        borderWidth:2.5,
+        pointRadius:(c)=>{const yr=parseInt(allLabels[c.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?6:2;},
+        pointBackgroundColor:(c)=>{const yr=parseInt(allLabels[c.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?orange:blue;},
+        pointBorderColor:'#fff', pointBorderWidth:1.5, fill:true, tension:0.3, spanGaps:false, order:3},
+      // iDeCo
+      {label:'iDeCo（実績）', data:pastIdecoLine, borderColor:orange, backgroundColor:'transparent', borderWidth:2.5, pointRadius:3, pointBackgroundColor:orange, pointBorderColor:'#fff', pointBorderWidth:1.5, fill:false, tension:0.3, spanGaps:false, order:4},
+      {label:'iDeCo（予測）', data:futureIdecoLine, borderColor:orange, backgroundColor:'rgba(255,149,0,0.07)', borderWidth:2.5, pointRadius:2, fill:true, tension:0.3, spanGaps:false, order:5},
     ]},
     options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
       plugins:{
         legend:{display:false},
         tooltip:{
           backgroundColor:isDark?'rgba(30,30,32,0.95)':'rgba(255,255,255,0.97)',
-          titleColor:isDark?'#fff':'#000',bodyColor:isDark?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)',
-          borderColor:isDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.1)',borderWidth:1,padding:10,cornerRadius:10,
+          titleColor:isDark?'#fff':'#000', bodyColor:isDark?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)',
+          borderColor:isDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.1)', borderWidth:1, padding:10, cornerRadius:10,
           filter:item=>item.raw!==null,
-          callbacks:{title:i=>i[0].label+'年',label:i=>{if(i.raw===null)return null;return ' '+i.dataset.label+': '+fmt(i.raw);}}
+          callbacks:{title:i=>i[0].label+'年', label:i=>i.raw!=null?' '+i.dataset.label+': '+fmt(i.raw):null}
         }
       },
       scales:{
-        x:{grid:{color:gridC,drawTicks:false},border:{display:false},ticks:{color:tickC,font:{size:10},maxTicksLimit:10,maxRotation:0,padding:4}},
-        y:{grid:{color:gridC,drawTicks:false},border:{display:false},ticks:{color:tickC,font:{size:10},padding:6,callback:v=>fmtAxis(v)}}
+        x:{grid:{color:gridC,drawTicks:false}, border:{display:false}, ticks:{color:tickC,font:{size:10},maxTicksLimit:10,maxRotation:0,padding:4}},
+        y:{grid:{color:gridC,drawTicks:false}, border:{display:false}, ticks:{color:tickC,font:{size:10},padding:6,callback:v=>fmtAxis(v)}}
       },
       layout:{padding:{top:4,right:8,bottom:4,left:4}}
     }
   });
   document.getElementById('fc-legend').innerHTML=`
-    <div class="legend-item"><div class="legend-dot" style="background:${blue}"></div>実績資産</div>
-    <div class="legend-item"><div class="legend-dot" style="background:${green}"></div>予測資産</div>
-    <div class="legend-item"><div class="legend-dot" style="background:${orange};opacity:0.7"></div>累計投資額</div>
-    <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>売却イベント</div>`;
+    <div class="legend-item"><div class="legend-dot" style="background:${purple}"></div>総資産</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${blue}"></div>NISA</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>iDeCo</div>
+    <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>売却イベント（●）</div>`;
 }
+
 function renderFcTable(pastRows,futureRows){
   const tbody=document.getElementById('fc-tbody');if(!tbody)return;
-  const pastHtml=pastRows.map(r=>`<tr style="opacity:0.55">
+  const pastHtml=pastRows.map(r=>`<tr style="opacity:0.6">
     <td>${r.year}<span style="font-size:0.65rem;color:var(--label3);margin-left:4px">実績</span></td>
-    <td>${fmt(r.inv)}</td><td>-</td><td>${fmt(r.asset)}</td>
+    <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
+    <td>-</td>
+    <td>${fmt(r.nisaAsset)}</td>
+    <td>${r.idecoInv?fmt(r.idecoInv):'-'}</td>
+    <td>${r.idecoAsset?fmt(r.idecoAsset):'-'}</td>
+    <td>${fmt(r.totalAsset)}</td>
   </tr>`).join('');
   const futureHtml=futureRows.map(r=>`<tr${r.nisaDone?' class="nisa-done"':''}>
     <td>${r.year}</td>
-    <td>${r.inv?fmt(r.inv):'-'}</td>
+    <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
     <td>${r.sale?`<span class="sale-tag">▲${fmt(r.sale)}</span>`:'-'}</td>
-    <td>${fmt(r.asset)}</td>
+    <td>${fmt(r.nisaAsset)}</td>
+    <td>${fmt(r.idecoInv)}</td>
+    <td>${fmt(r.idecoAsset)}</td>
+    <td>${fmt(r.totalAsset)}</td>
   </tr>`).join('');
   tbody.innerHTML=pastHtml+futureHtml;
 }
