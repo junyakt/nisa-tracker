@@ -299,7 +299,7 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
       <div class="section-header">年別予測（〜2048年）</div>
       <div class="inset-group" style="overflow:auto;-webkit-overflow-scrolling:touch">
         <table class="fc-table">
-          <thead><tr><th>年</th><th>NISA積立</th><th>売却</th><th>NISA資産</th><th>iDeCo拠出</th><th>iDeCo資産</th><th>総資産</th></tr></thead>
+          <thead><tr><th>年 / 年齢</th><th>NISA積立</th><th>売却</th><th>NISA資産</th><th>iDeCo拠出</th><th>iDeCo資産</th><th>総資産</th></tr></thead>
           <tbody id="fc-tbody"></tbody>
         </table>
       </div>
@@ -315,7 +315,13 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
           <div style="flex:1"><div class="s-title">投資設定</div><div class="s-sub" id="s-summary">—</div></div>
           <div class="s-chevron"><svg viewBox="0 0 8 14"><polyline points="1,1 7,7 1,13"/></svg></div>
         </div>
+        <div class="s-row" onclick="openBirthEdit()">
+          <div class="s-icon" style="background:#fce4ec">🎂</div>
+          <div style="flex:1"><div class="s-title">誕生日</div><div class="s-sub" id="s-birth-summary">未設定</div></div>
+          <div class="s-chevron"><svg viewBox="0 0 8 14"><polyline points="1,1 7,7 1,13"/></svg></div>
+        </div>
       </div>
+      <div style="height:0"></div>
       <div class="divider-label">データ管理</div>
       <div class="settings-group">
         <div class="s-row" onclick="exportData()">
@@ -386,7 +392,7 @@ let recordsTab='nisa'; // 'nisa' or 'ideco'
 
 function defData(){
   return{
-    settings:{startYear:2021, currentAsset:28525354, annualInvestment:1200000},
+    settings:{startYear:2021, currentAsset:28525354, annualInvestment:1200000, birthYear:null, birthMonth:null},
     records:[
       {year:2021, tsumitateAmount:0, growthAmount:0, oldNisaAmount:399996,  investmentAmount:399996,  yearEndAsset:460159,  memo:''},
       {year:2022, tsumitateAmount:0, growthAmount:0, oldNisaAmount:6799996, investmentAmount:6799996, yearEndAsset:7267946, memo:''},
@@ -396,12 +402,12 @@ function defData(){
       {year:2026, tsumitateAmount:600000,  growthAmount:350000,  oldNisaAmount:0, investmentAmount:950000,  yearEndAsset:28525354,memo:''},
     ],
     idecoRecords:[
-      {year:2021, contribution:276000, cumContribution:483000,  yearEndAsset:617296},
-      {year:2022, contribution:276000, cumContribution:759000,  yearEndAsset:879224},
-      {year:2023, contribution:276000, cumContribution:1035000, yearEndAsset:1645521},
-      {year:2024, contribution:276000, cumContribution:1311000, yearEndAsset:2010316},
-      {year:2025, contribution:276000, cumContribution:1587000, yearEndAsset:2759372},
-      {year:2026, contribution:46000,  cumContribution:1633000, yearEndAsset:3283798},
+      {year:2021, months:12, monthlyAmount:23000, contribution:276000, cumContribution:483000,  yearEndAsset:617296},
+      {year:2022, months:12, monthlyAmount:23000, contribution:276000, cumContribution:759000,  yearEndAsset:879224},
+      {year:2023, months:12, monthlyAmount:23000, contribution:276000, cumContribution:1035000, yearEndAsset:1645521},
+      {year:2024, months:12, monthlyAmount:23000, contribution:276000, cumContribution:1311000, yearEndAsset:2010316},
+      {year:2025, months:12, monthlyAmount:23000, contribution:276000, cumContribution:1587000, yearEndAsset:2759372},
+      {year:2026, months:2,  monthlyAmount:23000, contribution:46000,  cumContribution:1633000, yearEndAsset:3283798},
     ],
     idecoSettings:{currentAsset:3283798, startYear:2021},
     saleEvents:[],
@@ -527,6 +533,24 @@ function goPage(page,el){
   else if(page==='records')renderRecords();
   else if(page==='forecast'){loadFcParams();renderForecast();}
   else if(page==='settings')renderSettings();
+}
+
+/* ─── 年齢計算 ─── */
+// 誕生月が1〜5月：その年に誕生日を迎える（年度またぎ）→ その年に加齢
+// 誕生月が6〜12月：その年末時点ではまだ誕生日が来ていない可能性 → 前年末基準
+function calcAge(year, birthYear, birthMonth){
+  if(!birthYear||!birthMonth)return null;
+  // 年末（12月末）時点での年齢
+  // 1〜5月生まれ：その年に誕生日が来る → year - birthYear
+  // 6〜12月生まれ：その年末時点ではまだ → year - birthYear - 1 + (12月なら同じ)
+  // シンプルに：年末時点で誕生日が来ているかどうか
+  // 誕生月 <= 12 は常に年内なので year - birthYear が正しい
+  // ただし仕様：1〜5月は誕生日跨いで計算、6〜12月は跨がずに
+  if(birthMonth>=1&&birthMonth<=5){
+    return year-birthYear; // その年に誕生日が来る
+  }else{
+    return year-birthYear-1; // 年末時点でまだ誕生日が来ていない
+  }
 }
 
 /* ─── IRR ─── */
@@ -826,6 +850,10 @@ function openAddIdecoRecord(year){
     const y=now-i;
     return `<option value="${y}"${(isEdit?rec.year:now)===y?' selected':''}>${y}年</option>`;
   }).join('');
+  const monthOpts=[...Array(12)].map((_,i)=>{
+    const m=i+1;
+    return `<option value="${m}"${(isEdit?(rec.months||12):12)===m?' selected':''}>${m}ヶ月</option>`;
+  }).join('');
   document.getElementById('sheet-content').innerHTML=`
     <div class="sheet-handle"></div>
     <div class="sheet-title">${isEdit?year+'年のiDeCo実績':'新しいiDeCo実績'}</div>
@@ -835,8 +863,16 @@ function openAddIdecoRecord(year){
         <select class="field-input" id="ir-year" style="cursor:pointer;appearance:auto;color:var(--blue);text-align:right;">${yearOpts}</select>
       </div>
       <div class="sheet-field">
-        <span class="field-label">年度拠出金</span>
-        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-contrib', isEdit?rec.contribution:276000)}</div>
+        <span class="field-label">月額</span>
+        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-monthly', isEdit?(rec.monthlyAmount||23000):23000)}</div>
+      </div>
+      <div class="sheet-field">
+        <span class="field-label">拠出月数</span>
+        <select class="field-input" id="ir-months" style="cursor:pointer;appearance:auto;color:var(--blue);text-align:right;">${monthOpts}</select>
+      </div>
+      <div class="sheet-field">
+        <span class="field-label">年間拠出額</span>
+        <div style="font-size:0.9375rem;color:var(--label3)" id="ir-contrib-preview">${fmt((isEdit?(rec.monthlyAmount||23000):23000)*(isEdit?(rec.months||12):12))}</div>
       </div>
       <div class="sheet-field">
         <span class="field-label">拠出金累計</span>
@@ -853,14 +889,30 @@ function openAddIdecoRecord(year){
     </div>
     ${isEdit?`<button class="sheet-btn destructive" onclick="deleteIdecoRecord(${year})">この年のデータを削除</button>`:''}
   `;
+  // 月数・月額変更時に年間拠出額をプレビュー更新
+  setTimeout(()=>{
+    const update=()=>{
+      const m=getMoneyVal('ir-monthly');
+      const months=parseInt(document.getElementById('ir-months').value)||12;
+      const el=document.getElementById('ir-contrib-preview');
+      if(el)el.textContent=fmt(m*months);
+    };
+    const mEl=document.getElementById('ir-monthly');
+    const moEl=document.getElementById('ir-months');
+    if(mEl)mEl.addEventListener('input',update);
+    if(moEl)moEl.addEventListener('change',update);
+  },100);
   document.getElementById('sheet-overlay').classList.add('open');
 }
 
 function saveIdecoRecord(isEdit){
   const year=parseInt(document.getElementById('ir-year').value);
+  const monthlyAmount=getMoneyVal('ir-monthly')||23000;
+  const months=parseInt(document.getElementById('ir-months').value)||12;
+  const contribution=monthlyAmount*months;
   const d=load();
   if(!d.idecoRecords)d.idecoRecords=[];
-  const rec={year, contribution:getMoneyVal('ir-contrib'), cumContribution:getMoneyVal('ir-cum'), yearEndAsset:getMoneyVal('ir-asset')};
+  const rec={year, months, monthlyAmount, contribution, cumContribution:getMoneyVal('ir-cum'), yearEndAsset:getMoneyVal('ir-asset')};
   const idx=d.idecoRecords.findIndex(r=>r.year===year);
   if(idx>=0)d.idecoRecords[idx]=rec;else d.idecoRecords.push(rec);
   const latest=[...d.idecoRecords].sort((a,b)=>b.year-a.year)[0];
@@ -1055,6 +1107,7 @@ function drawFcChart(pastRows,futureRows){
   const futureIdecoLine=[...Array(N).fill(null), curIdeco, ...futureRows.map(r=>r.idecoAsset)];
   const futureTotalLine=[...Array(N).fill(null), curTotal, ...futureRows.map(r=>r.totalAsset)];
 
+  const red=isDark?'#ff453a':'#ff3b30';
   const ctx=document.getElementById('chart-forecast').getContext('2d');
   fcChart=new Chart(ctx,{
     type:'line',
@@ -1067,7 +1120,7 @@ function drawFcChart(pastRows,futureRows){
       {label:'NISA（予測）', data:futureNisaLine, borderColor:blue, backgroundColor:blueAlpha,
         borderWidth:2.5,
         pointRadius:(c)=>{const yr=parseInt(allLabels[c.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?6:2;},
-        pointBackgroundColor:(c)=>{const yr=parseInt(allLabels[c.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?orange:blue;},
+        pointBackgroundColor:(c)=>{const yr=parseInt(allLabels[c.dataIndex]);return(d.saleEvents||[]).some(e=>e.year===yr)?red:blue;},
         pointBorderColor:'#fff', pointBorderWidth:1.5, fill:true, tension:0.3, spanGaps:false, order:3},
       // iDeCo
       {label:'iDeCo（実績）', data:pastIdecoLine, borderColor:orange, backgroundColor:'transparent', borderWidth:2.5, pointRadius:3, pointBackgroundColor:orange, pointBorderColor:'#fff', pointBorderWidth:1.5, fill:false, tension:0.3, spanGaps:false, order:4},
@@ -1097,29 +1150,45 @@ function drawFcChart(pastRows,futureRows){
     <div class="legend-item"><div class="legend-dot" style="background:${purple}"></div>総資産</div>
     <div class="legend-item"><div class="legend-dot" style="background:${blue}"></div>NISA</div>
     <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>iDeCo</div>
-    <div class="legend-item"><div class="legend-dot" style="background:${orange}"></div>売却イベント（●）</div>`;
+    <div class="legend-item"><div class="legend-dot" style="background:${red}"></div>売却イベント</div>`;
 }
 
 function renderFcTable(pastRows,futureRows){
   const tbody=document.getElementById('fc-tbody');if(!tbody)return;
-  const pastHtml=pastRows.map(r=>`<tr style="opacity:0.6">
-    <td>${r.year}<span style="font-size:0.65rem;color:var(--label3);margin-left:4px">実績</span></td>
-    <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
-    <td>-</td>
-    <td>${fmt(r.nisaAsset)}</td>
-    <td>${r.idecoInv?fmt(r.idecoInv):'-'}</td>
-    <td>${r.idecoAsset?fmt(r.idecoAsset):'-'}</td>
-    <td>${fmt(r.totalAsset)}</td>
-  </tr>`).join('');
-  const futureHtml=futureRows.map(r=>`<tr${r.nisaDone?' class="nisa-done"':''}>
-    <td>${r.year}</td>
-    <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
-    <td>${r.sale?`<span class="sale-tag">▲${fmt(r.sale)}</span>`:'-'}</td>
-    <td>${fmt(r.nisaAsset)}</td>
-    <td>${fmt(r.idecoInv)}</td>
-    <td>${fmt(r.idecoAsset)}</td>
-    <td>${fmt(r.totalAsset)}</td>
-  </tr>`).join('');
+  const d=load();
+  const birthMonth=d.settings.birthMonth||null;
+  // 誕生年を逆算：設定の開始年と現在年から推定できないので、現在年から年齢を逆算
+  // birthMonthだけあれば各年の年齢を出せる
+  // 誕生年は別途必要なので、設定から現在の年齢を出す基準年が必要
+  // → 将来予測の最初の年（now+1）の年齢を基準にする
+  const now=new Date().getFullYear();
+  // birthYearはsettingsに持たせる（誕生月と合わせて）
+  const birthYear=d.settings.birthYear||null;
+
+  const pastHtml=pastRows.map(r=>{
+    const age=birthYear&&birthMonth?calcAge(r.year,birthYear,birthMonth):null;
+    return `<tr style="opacity:0.6">
+      <td>${r.year}${age!=null?` <span style="color:var(--label3);font-size:0.7rem">(${age})</span>`:''}</td>
+      <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
+      <td>-</td>
+      <td>${fmt(r.nisaAsset)}</td>
+      <td>${r.idecoInv?fmt(r.idecoInv):'-'}</td>
+      <td>${r.idecoAsset?fmt(r.idecoAsset):'-'}</td>
+      <td>${fmt(r.totalAsset)}</td>
+    </tr>`;
+  }).join('');
+  const futureHtml=futureRows.map(r=>{
+    const age=birthYear&&birthMonth?calcAge(r.year,birthYear,birthMonth):null;
+    return `<tr${r.nisaDone?' class="nisa-done"':''}>
+      <td>${r.year}${age!=null?` <span style="color:var(--label3);font-size:0.7rem">(${age})</span>`:''}</td>
+      <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
+      <td>${r.sale?`<span class="sale-tag">▲${fmt(r.sale)}</span>`:'-'}</td>
+      <td>${fmt(r.nisaAsset)}</td>
+      <td>${fmt(r.idecoInv)}</td>
+      <td>${fmt(r.idecoAsset)}</td>
+      <td>${fmt(r.totalAsset)}</td>
+    </tr>`;
+  }).join('');
   tbody.innerHTML=pastHtml+futureHtml;
 }
 
@@ -1195,6 +1264,57 @@ function deleteEvent(){
 function renderSettings(){
   const d=load();const s=d.settings;
   document.getElementById('s-summary').textContent=`${s.startYear}年〜 ／ 現在資産 ${fmt(s.currentAsset)}`;
+  const bEl=document.getElementById('s-birth-summary');
+  if(bEl){
+    if(s.birthYear&&s.birthMonth) bEl.textContent=`${s.birthYear}年${s.birthMonth}月生まれ`;
+    else bEl.textContent='未設定';
+  }
+}
+function openBirthEdit(){
+  const d=load();const s=d.settings;
+  const now=new Date().getFullYear();
+  // 誕生年・月を1つのセレクトにまとめて表示
+  // 誕生年プルダウン
+  let byOpts=`<option value="">年を選択</option>`;
+  for(let y=now-20;y>=now-80;y--){
+    byOpts+=`<option value="${y}"${s.birthYear===y?' selected':''}>${y}年</option>`;
+  }
+  // 誕生月プルダウン
+  let bmOpts=`<option value="">月を選択</option>`;
+  for(let m=1;m<=12;m++){
+    bmOpts+=`<option value="${m}"${s.birthMonth===m?' selected':''}>${m}月</option>`;
+  }
+  document.getElementById('sheet-content').innerHTML=`
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">誕生日</div>
+    <div class="sheet-group">
+      <div class="sheet-field">
+        <span class="field-label">誕生年月</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="field-input" id="b-year" style="cursor:pointer;appearance:auto;color:var(--blue);width:90px">${byOpts}</select>
+          <select class="field-input" id="b-month" style="cursor:pointer;appearance:auto;color:var(--blue);width:70px">${bmOpts}</select>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn cancel" onclick="closeSheet()">キャンセル</button>
+      <button class="sheet-btn save" onclick="saveBirth()">保存</button>
+    </div>
+    <div style="padding:12px 16px 0;font-size:0.75rem;color:var(--label3);line-height:1.7">
+      ※ 1〜5月生まれ：その年に誕生日を迎える計算<br>
+      ※ 6〜12月生まれ：年末時点で誕生日前として計算
+    </div>
+  `;
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+function saveBirth(){
+  const by=document.getElementById('b-year').value;
+  const bm=document.getElementById('b-month').value;
+  const d=load();
+  d.settings.birthYear=by?parseInt(by):null;
+  d.settings.birthMonth=bm?parseInt(bm):null;
+  save(d);closeSheet();renderSettings();toast('保存しました');
+  if(curPage==='forecast')renderForecast();
 }
 function openSettingEdit(){
   const d=load();const s=d.settings;
