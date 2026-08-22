@@ -54,10 +54,10 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
 .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--page-bg);border-bottom:0.5px solid var(--separator-light);}
 .nav-title{font-size:1.0625rem;font-weight:600;color:var(--label1)}
 .nav-action{background:none;border:none;color:var(--blue);font-size:0.875rem;font-family:var(--font);cursor:pointer;padding:4px;}
-.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(5.5rem + var(--safe-bottom));}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(7rem + var(--safe-bottom));}
 .scroll-area::-webkit-scrollbar{display:none}
-.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(242,242,247,0.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:0.5px solid var(--separator-light);display:flex;padding:8px 0 calc(8px + var(--safe-bottom));z-index:10;}
-@media(prefers-color-scheme:dark){.tab-bar{background:rgba(28,28,30,0.88)}}
+.tab-bar{position:fixed;bottom:calc(12px + var(--safe-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:398px;background:rgba(242,242,247,0.95);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border:0.5px solid var(--separator-light);border-radius:20px;display:flex;padding:8px 0;z-index:10;box-shadow:0 4px 24px rgba(0,0,0,0.12);}
+@media(prefers-color-scheme:dark){.tab-bar{background:rgba(28,28,30,0.95);box-shadow:0 4px 24px rgba(0,0,0,0.4)}}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:var(--font);color:var(--label3);transition:color 0.15s;padding:0;}
 .tab-item.active{color:var(--blue)}
 .tab-icon{width:24px;height:24px}
@@ -122,6 +122,9 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
 .fc-table tr:last-child td{border-bottom:none}
 .fc-table tr.nisa-done td:first-child::after{content:'✓';color:var(--orange);margin-left:6px;font-size:0.65rem}
 .sale-tag{color:var(--red)}
+.col-toggle{padding:5px 10px;border-radius:20px;font-size:0.75rem;font-weight:500;font-family:var(--font);cursor:pointer;border:0.5px solid var(--separator);background:var(--fill2);color:var(--label3);transition:all 0.15s;}
+.col-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.col-toggle:active{opacity:0.7}
 .event-pill{display:inline-flex;align-items:center;gap:5px;background:var(--fill2);border-radius:20px;padding:4px 10px;font-size:0.8125rem;color:var(--label2);cursor:pointer;border:0.5px solid var(--separator-light);}
 .event-pill:active{opacity:0.7}
 .events-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
@@ -296,12 +299,33 @@ html,body{height:100%;background:var(--page-bg);color:var(--label1);font-family:
         <div class="forecast-chart-inner"><canvas id="chart-forecast"></canvas></div>
         <div class="chart-legend" id="fc-legend"></div>
       </div>
-      <div class="section-header">年別予測（〜2048年）</div>
-      <div class="inset-group" style="overflow:auto;-webkit-overflow-scrolling:touch">
-        <table class="fc-table">
-          <thead><tr><th>年 / 年齢</th><th>NISA積立</th><th>売却</th><th>NISA資産</th><th>iDeCo拠出</th><th>iDeCo資産</th><th>総資産</th></tr></thead>
-          <tbody id="fc-tbody"></tbody>
-        </table>
+
+      <!-- 列の表示切り替え -->
+      <div class="section-header" style="padding-bottom:4px">年別予測（〜2048年）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px" id="col-toggles">
+        <button class="col-toggle active" data-col="nisa-inv" onclick="toggleCol(this)">NISA積立</button>
+        <button class="col-toggle active" data-col="sale" onclick="toggleCol(this)">売却</button>
+        <button class="col-toggle active" data-col="nisa-asset" onclick="toggleCol(this)">NISA資産</button>
+        <button class="col-toggle active" data-col="ideco-inv" onclick="toggleCol(this)">iDeCo拠出</button>
+        <button class="col-toggle active" data-col="ideco-asset" onclick="toggleCol(this)">iDeCo資産</button>
+        <button class="col-toggle active" data-col="total" onclick="toggleCol(this)">総資産</button>
+      </div>
+
+      <div style="margin:0 16px 8px;border-radius:var(--radius-lg);overflow:hidden;border:0.5px solid var(--separator-light);">
+        <div style="overflow-x:auto;overflow-y:auto;max-height:420px;-webkit-overflow-scrolling:touch;">
+          <table class="fc-table" id="fc-table">
+            <thead><tr>
+              <th class="th-year" style="position:sticky;top:0;left:0;z-index:3;background:var(--card-bg2)">年 / 年齢</th>
+              <th class="th-nisa-inv" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">NISA積立</th>
+              <th class="th-sale" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">売却</th>
+              <th class="th-nisa-asset" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">NISA資産</th>
+              <th class="th-ideco-inv" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">iDeCo拠出</th>
+              <th class="th-ideco-asset" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">iDeCo資産</th>
+              <th class="th-total" style="position:sticky;top:0;z-index:2;background:var(--card-bg2)">総資産</th>
+            </tr></thead>
+            <tbody id="fc-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div style="height:8px"></div>
     </div>
@@ -726,7 +750,16 @@ function drawAssetChart(d){
     <div class="legend-item"><div class="legend-dot" style="background:${green};opacity:0.7"></div>累計投資額</div>`;
 }
 
-/* ─── Records ─── */
+/* ─── 将来予測 列表示切り替え ─── */
+function toggleCol(btn){
+  btn.classList.toggle('active');
+  const col=btn.dataset.col;
+  const show=btn.classList.contains('active');
+  // ヘッダーとデータセルを同時に表示/非表示
+  document.querySelectorAll('.th-'+col+', .td-'+col).forEach(el=>{
+    el.style.display=show?'':'none';
+  });
+}
 function switchRecordsTab(tab){
   recordsTab=tab;
   const btnNisa=document.getElementById('tab-nisa');
@@ -846,14 +879,12 @@ function openAddIdecoRecord(year){
   const rec=year!=null?(d.idecoRecords||[]).find(r=>r.year===year):null;
   const isEdit=!!rec;
   const now=new Date().getFullYear();
-  const yearOpts=[...Array(now-2020)].map((_,i)=>{
+  const yearOpts=[...Array(now-2019)].map((_,i)=>{
     const y=now-i;
     return `<option value="${y}"${(isEdit?rec.year:now)===y?' selected':''}>${y}年</option>`;
   }).join('');
-  const monthOpts=[...Array(12)].map((_,i)=>{
-    const m=i+1;
-    return `<option value="${m}"${(isEdit?(rec.months||12):12)===m?' selected':''}>${m}ヶ月</option>`;
-  }).join('');
+  // 既存データから年間拠出額を取得（months×monthlyAmount or contribution）
+  const defContrib=isEdit?(rec.contribution||0):276000;
   document.getElementById('sheet-content').innerHTML=`
     <div class="sheet-handle"></div>
     <div class="sheet-title">${isEdit?year+'年のiDeCo実績':'新しいiDeCo実績'}</div>
@@ -863,16 +894,8 @@ function openAddIdecoRecord(year){
         <select class="field-input" id="ir-year" style="cursor:pointer;appearance:auto;color:var(--blue);text-align:right;">${yearOpts}</select>
       </div>
       <div class="sheet-field">
-        <span class="field-label">月額</span>
-        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-monthly', isEdit?(rec.monthlyAmount||23000):23000)}</div>
-      </div>
-      <div class="sheet-field">
-        <span class="field-label">拠出月数</span>
-        <select class="field-input" id="ir-months" style="cursor:pointer;appearance:auto;color:var(--blue);text-align:right;">${monthOpts}</select>
-      </div>
-      <div class="sheet-field">
         <span class="field-label">年間拠出額</span>
-        <div style="font-size:0.9375rem;color:var(--label3)" id="ir-contrib-preview">${fmt((isEdit?(rec.monthlyAmount||23000):23000)*(isEdit?(rec.months||12):12))}</div>
+        <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-contrib', defContrib)}</div>
       </div>
       <div class="sheet-field">
         <span class="field-label">拠出金累計</span>
@@ -883,36 +906,22 @@ function openAddIdecoRecord(year){
         <div class="field-input-wrap"><span class="field-yen">¥</span>${makeMoneyInput('ir-asset', isEdit?rec.yearEndAsset:0)}</div>
       </div>
     </div>
+    <div style="padding:8px 16px 0;font-size:0.75rem;color:var(--label3)">※ 年途中で停止した場合は実際に拠出した合計額を入力</div>
     <div class="sheet-btn-row">
       <button class="sheet-btn cancel" onclick="closeSheet()">キャンセル</button>
       <button class="sheet-btn save" onclick="saveIdecoRecord(${isEdit})">保存</button>
     </div>
     ${isEdit?`<button class="sheet-btn destructive" onclick="deleteIdecoRecord(${year})">この年のデータを削除</button>`:''}
   `;
-  // 月数・月額変更時に年間拠出額をプレビュー更新
-  setTimeout(()=>{
-    const update=()=>{
-      const m=getMoneyVal('ir-monthly');
-      const months=parseInt(document.getElementById('ir-months').value)||12;
-      const el=document.getElementById('ir-contrib-preview');
-      if(el)el.textContent=fmt(m*months);
-    };
-    const mEl=document.getElementById('ir-monthly');
-    const moEl=document.getElementById('ir-months');
-    if(mEl)mEl.addEventListener('input',update);
-    if(moEl)moEl.addEventListener('change',update);
-  },100);
   document.getElementById('sheet-overlay').classList.add('open');
 }
 
 function saveIdecoRecord(isEdit){
   const year=parseInt(document.getElementById('ir-year').value);
-  const monthlyAmount=getMoneyVal('ir-monthly')||23000;
-  const months=parseInt(document.getElementById('ir-months').value)||12;
-  const contribution=monthlyAmount*months;
+  const contribution=getMoneyVal('ir-contrib');
   const d=load();
   if(!d.idecoRecords)d.idecoRecords=[];
-  const rec={year, months, monthlyAmount, contribution, cumContribution:getMoneyVal('ir-cum'), yearEndAsset:getMoneyVal('ir-asset')};
+  const rec={year, contribution, cumContribution:getMoneyVal('ir-cum'), yearEndAsset:getMoneyVal('ir-asset')};
   const idx=d.idecoRecords.findIndex(r=>r.year===year);
   if(idx>=0)d.idecoRecords[idx]=rec;else d.idecoRecords.push(rec);
   const latest=[...d.idecoRecords].sort((a,b)=>b.year-a.year)[0];
@@ -1039,6 +1048,13 @@ function calcForecast(){
   let nisaAsset=baseAsset, cumNewNisa=newNisaInvested;
   const idecoLatest=(d.idecoRecords||[]).sort((a,b)=>b.year-a.year)[0];
   let idecoAsset=idecoLatest?idecoLatest.yearEndAsset:0;
+  // 年間拠出額が12ヶ月分（276,000円）以上なら継続、未満なら停止
+  // 月額は最新年の拠出額÷12で推定（再開・変更にも対応）
+  const latestContrib=idecoLatest?idecoLatest.contribution:0;
+  const latestMonthly=latestContrib>0?Math.round(latestContrib/12):IDECO_MONTHLY;
+  const FULL_YEAR_CONTRIB=latestMonthly*12;
+  const idecoActive=latestContrib>=FULL_YEAR_CONTRIB;
+  const IDECO_ANNUAL_FUTURE=idecoActive?FULL_YEAR_CONTRIB:0;
   const futureRows=[];
   for(let y=now+1;y<=2048;y++){
     // NISA
@@ -1046,8 +1062,8 @@ function calcForecast(){
     const sale=(d.saleEvents||[]).filter(e=>e.year===y).reduce((s,e)=>s+e.amount,0);
     nisaAsset=Math.max(0,nisaAsset+nisaInv-sale)*(1+rate);
     cumNewNisa+=nisaInv;
-    // iDeCo（2048年まで積立、以降は運用のみ）
-    const idecoInv=y<=IDECO_END?IDECO_ANNUAL:0;
+    // iDeCo（停止中なら0、継続中は2048年まで積立）
+    const idecoInv=(idecoActive&&y<=IDECO_END)?IDECO_ANNUAL_FUTURE:0;
     idecoAsset=(idecoAsset+idecoInv)*(1+rate);
     futureRows.push({
       year:y, nisaInv, sale,
@@ -1169,24 +1185,24 @@ function renderFcTable(pastRows,futureRows){
     const age=birthYear&&birthMonth?calcAge(r.year,birthYear,birthMonth):null;
     return `<tr style="opacity:0.6">
       <td>${r.year}${age!=null?` <span style="color:var(--label3);font-size:0.7rem">(${age})</span>`:''}</td>
-      <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
-      <td>-</td>
-      <td>${fmt(r.nisaAsset)}</td>
-      <td>${r.idecoInv?fmt(r.idecoInv):'-'}</td>
-      <td>${r.idecoAsset?fmt(r.idecoAsset):'-'}</td>
-      <td>${fmt(r.totalAsset)}</td>
+      <td class="td-nisa-inv">${r.nisaInv?fmt(r.nisaInv):'-'}</td>
+      <td class="td-sale">-</td>
+      <td class="td-nisa-asset">${fmt(r.nisaAsset)}</td>
+      <td class="td-ideco-inv">${r.idecoInv?fmt(r.idecoInv):'-'}</td>
+      <td class="td-ideco-asset">${r.idecoAsset?fmt(r.idecoAsset):'-'}</td>
+      <td class="td-total">${fmt(r.totalAsset)}</td>
     </tr>`;
   }).join('');
   const futureHtml=futureRows.map(r=>{
     const age=birthYear&&birthMonth?calcAge(r.year,birthYear,birthMonth):null;
     return `<tr${r.nisaDone?' class="nisa-done"':''}>
       <td>${r.year}${age!=null?` <span style="color:var(--label3);font-size:0.7rem">(${age})</span>`:''}</td>
-      <td>${r.nisaInv?fmt(r.nisaInv):'-'}</td>
-      <td>${r.sale?`<span class="sale-tag">▲${fmt(r.sale)}</span>`:'-'}</td>
-      <td>${fmt(r.nisaAsset)}</td>
-      <td>${fmt(r.idecoInv)}</td>
-      <td>${fmt(r.idecoAsset)}</td>
-      <td>${fmt(r.totalAsset)}</td>
+      <td class="td-nisa-inv">${r.nisaInv?fmt(r.nisaInv):'-'}</td>
+      <td class="td-sale">${r.sale?`<span class="sale-tag">▲${fmt(r.sale)}</span>`:'-'}</td>
+      <td class="td-nisa-asset">${fmt(r.nisaAsset)}</td>
+      <td class="td-ideco-inv">${fmt(r.idecoInv)}</td>
+      <td class="td-ideco-asset">${fmt(r.idecoAsset)}</td>
+      <td class="td-total">${fmt(r.totalAsset)}</td>
     </tr>`;
   }).join('');
   tbody.innerHTML=pastHtml+futureHtml;
